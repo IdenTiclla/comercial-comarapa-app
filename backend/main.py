@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 # from pydantic import BaseModel, Field
 from . import models, schemas
@@ -33,6 +33,17 @@ def create_product(product: schemas.Product, db: Session = Depends(get_db)) -> s
     db.commit()
     db.refresh(new_product)
     return new_product
+
+@app.get('/products/{product_id}')
+def get_specific_product(product_id: int, db: Session = Depends(get_db)) -> schemas.Product:
+    user = db.query(models.Product).filter(models.Product.id == product_id).first()
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"El producto con el id: {product_id} no existe."
+        )
+    return user
+
 
 @app.get('/products') 
 def get_products(db: Session = Depends(get_db)) -> list[schemas.Product]:
