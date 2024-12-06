@@ -36,13 +36,28 @@ def create_product(product: schemas.Product, db: Session = Depends(get_db)) -> s
 
 @app.get('/products/{product_id}')
 def get_specific_product(product_id: int, db: Session = Depends(get_db)) -> schemas.Product:
-    user = db.query(models.Product).filter(models.Product.id == product_id).first()
-    if user is None:
+    product = db.query(models.Product).filter(models.Product.id == product_id).first()
+    if product is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"El producto con el id: {product_id} no existe."
         )
-    return user
+    return product
+
+@app.delete('/products/{product_id}')
+def delete_specific_user(product_id: int, db: Session = Depends(get_db)) -> schemas.Product:
+    product = db.query(models.Product).filter(models.Product.id == product_id).first()
+    if product is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"El producto con el id: {product_id} no existe."
+        )
+    
+    # Borrando el producto
+    db.delete(product)
+    db.commit()
+
+    return product
 
 
 @app.get('/products') 
