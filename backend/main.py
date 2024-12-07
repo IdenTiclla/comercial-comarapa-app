@@ -59,6 +59,26 @@ def delete_specific_user(product_id: int, db: Session = Depends(get_db)) -> sche
 
     return product
 
+@app.patch('/products/{product_id}')
+def patch_product(product_id: int, product_data: schemas.ProductPatch, db: Session = Depends(get_db)) -> schemas.Product:
+    product_db = db.query(models.Product).filter(models.Product.id == product_id).first()
+    if product_db is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Product with the id: {product_id} does't exists."
+        )
+    update_data = product_data.dict(exclude_unset=True)
+    if not update_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Please enter somme data to update.'
+        )
+    for field, value in update_data.items():
+        setattr(product_db, field, value)
+
+    db.commit()
+    db.refresh(product_db)
+    return product_db
 
 @app.get('/products') 
 def get_products(db: Session = Depends(get_db)) -> list[schemas.Product]:
